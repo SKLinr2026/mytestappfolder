@@ -127,6 +127,22 @@ body {
 }
 .question-block.answered { border-color: #c6f6d5; }
 
+.comment-box {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: inherit;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+}
+.comment-box:focus { border-color: #4a90d9; }
+.word-count { font-size: 12px; color: #718096; text-align: right; margin-top: 4px; }
+.word-count.over { color: #e53e3e; font-weight: 600; }
+
 .question-text {
   font-size: 15px;
   font-weight: 600;
@@ -378,6 +394,13 @@ const SECTIONS = [
           {label:'No reliable sign of motivation', points:0}
         ] }
     ]
+  },
+  {
+    title: '5. Comments',
+    maxPoints: 0,
+    questions: [
+      { id: 'comment', text: 'Please provide any additional comments about this candidate (max 100 words):', type: 'textarea' }
+    ]
   }
 ];
 
@@ -516,12 +539,19 @@ function renderSection() {
   sec.questions.forEach(q => {
     html += `<div class="question-block ${answers[q.id] ? 'answered' : ''}" id="block_${q.id}">`;
     html += `<div class="question-text">${q.text}</div>`;
-    html += `<div class="choices">`;
-    q.choices.forEach(choice => {
-      const selected = answers[q.id] && answers[q.id].label === choice.label ? ' selected' : '';
-      html += `<button class="choice-btn${selected}" onclick="selectChoice('${q.id}', '${choice.label}', ${choice.points})">${choice.label}</button>`;
-    });
-    html += `</div></div>`;
+    if (q.type === 'textarea') {
+      const val = answers[q.id] ? answers[q.id].label : '';
+      html += `<textarea id="input_${q.id}" class="comment-box" maxlength="700" placeholder="Enter your comments here..." oninput="updateComment('${q.id}')">${val}</textarea>`;
+      html += `<div class="word-count" id="wc_${q.id}">0 / 100 words</div>`;
+    } else {
+      html += `<div class="choices">`;
+      q.choices.forEach(choice => {
+        const selected = answers[q.id] && answers[q.id].label === choice.label ? ' selected' : '';
+        html += `<button class="choice-btn${selected}" onclick="selectChoice('${q.id}', '${choice.label}', ${choice.points})">${choice.label}</button>`;
+      });
+      html += `</div>`;
+    }
+    html += `</div>`;
   });
   
   body.innerHTML = html;
@@ -550,15 +580,36 @@ function selectChoice(questionId, label, points) {
   checkSectionComplete();
 }
 
+function updateComment(questionId) {
+  const textarea = document.getElementById('input_' + questionId);
+  const text = textarea.value;
+  const words = text.trim() ? text.trim().split(/\s+/) : [];
+  const wc = document.getElementById('wc_' + questionId);
+  wc.textContent = words.length + ' / 100 words';
+  wc.className = words.length > 100 ? 'word-count over' : 'word-count';
+  
+  if (words.length <= 100 && text.trim().length > 0) {
+    answers[questionId] = { label: text.trim(), points: 0 };
+    document.getElementById('block_' + questionId).classList.add('answered');
+  } else if (words.length > 100) {
+    delete answers[questionId];
+  }
+  // Comment is optional — allow proceeding even if empty
+  checkSectionComplete();
+}
+
 function checkSectionComplete() {
   const sec = SECTIONS[currentSectionIdx];
-  const allAnswered = sec.questions.every(q => answers[q.id]);
+  const allAnswered = sec.questions.every(q => {
+    if (q.type === 'textarea') return true; // comment is optional
+    return answers[q.id];
+  });
   document.getElementById('btnNextQ').disabled = !allAnswered;
 }
 
 function nextSection() {
   const sec = SECTIONS[currentSectionIdx];
-  if (!sec.questions.every(q => answers[q.id])) return;
+  if (!sec.questions.every(q => q.type === 'textarea' || answers[q.id])) return;
   
   if (currentSectionIdx < SECTIONS.length - 1) {
     currentSectionIdx++;
@@ -601,7 +652,8 @@ async function submitEvaluation() {
     section3Total: sec3,
     q4: answers['q4']?.label,
     section4Total: sec4,
-    totalPoints: total
+    totalPoints: total,
+    comment: answers['comment']?.label || ''
   };
   
   // Send to Google Sheets

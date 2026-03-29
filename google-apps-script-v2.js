@@ -71,9 +71,15 @@ function doPost(e) {
     sheet.getRange(34, evalCol + 1).setValue(data.totalPoints);
     sheet.getRange(34, evalCol + 1).setBackground('#ff6666').setFontWeight('bold').setFontSize(12);
     
+    // Comment (row 36)
+    if (data.comment) {
+      sheet.getRange(36, evalCol).setValue(data.comment);
+      sheet.getRange(36, evalCol).setWrap(true);
+    }
+    
     // Timestamp
-    sheet.getRange(35, evalCol).setValue(new Date().toLocaleString('en-US', {timeZone: 'America/New_York'}));
-    sheet.getRange(35, evalCol).setFontSize(8).setFontColor('#999999');
+    sheet.getRange(37, evalCol).setValue(new Date().toLocaleString('en-US', {timeZone: 'America/New_York'}));
+    sheet.getRange(37, evalCol).setFontSize(8).setFontColor('#999999');
     
     // Auto-resize
     sheet.autoResizeColumns(evalCol, 2);
@@ -183,7 +189,10 @@ function buildTemplate(sheet, interviewDate, candidateName) {
   sheet.getRange('D34').setValue(50).setBackground('#ff6666').setFontWeight('bold').setFontSize(12);
   
   // Row 35: Timestamp label
-  sheet.getRange('A35').setValue('Submitted at:').setFontSize(8).setFontColor('#999999');
+  // Comment section
+  sheet.getRange('A36').setValue('Comments:').setFontWeight('bold').setBackground('#e0e0e0');
+  
+  sheet.getRange('A37').setValue('Submitted at:').setFontSize(8).setFontColor('#999999');
   
   // Evaluator column headers (row 6)
   sheet.getRange(6, 1).setValue('').setBackground('#e0e0e0');
