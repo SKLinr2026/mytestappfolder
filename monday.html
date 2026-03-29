@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a365d">
+<title>Interview Evaluation</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f0f4f8;
+  color: #2d3748;
+  min-height: 100vh;
+}
+
+/* Lock Screen */
+.lock-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+.lock-box {
+  background: white;
+  border-radius: 20px;
+  padding: 40px 30px;
+  text-align: center;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+.lock-box input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 16px;
+  outline: none;
+  margin-bottom: 12px;
+}
+.lock-box input:focus { border-color: #4a90d9; }
+.pass-error { color: #e53e3e; font-size: 14px; min-height: 20px; margin-bottom: 8px; }
+
+/* Setup Screen */
+.setup-screen {
+  display: none;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+.setup-screen h2 { text-align: center; margin-bottom: 24px; color: #1a365d; }
+.setup-field { margin-bottom: 16px; }
+.setup-field label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; color: #4a5568; }
+.setup-field input, .setup-field select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 16px;
+  outline: none;
+}
+.setup-field input:focus, .setup-field select:focus { border-color: #4a90d9; }
+
+/* Buttons */
+.btn {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-primary { background: #4a90d9; color: white; }
+.btn-primary:active { background: #3a7bc8; }
+.btn-success { background: #48bb78; color: white; }
+.btn-success:active { background: #38a169; }
+.btn-danger { background: #e53e3e; color: white; margin-top: 10px; }
+
+/* Evaluation Screen - full window, side by side with Zoom */
+.eval-screen {
+  display: none;
+  min-height: 100vh;
+  flex-direction: column;
+}
+.eval-screen.active { display: flex; }
+
+.eval-header {
+  background: #1a365d;
+  color: white;
+  padding: 14px 20px;
+  text-align: center;
+}
+.eval-header .date-info { font-size: 13px; color: #fc8181; font-weight: 600; margin-top: 4px; }
+.eval-header .candidate-name { font-size: 22px; font-weight: 700; }
+.eval-header .judge-info { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+.eval-header .progress { font-size: 12px; opacity: 0.6; margin-top: 4px; }
+
+.eval-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  max-width: 700px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.section-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #4a90d9;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #4a90d9;
+}
+
+.question-block {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: white;
+  border-radius: 12px;
+  border: 2px solid transparent;
+}
+.question-block.answered { border-color: #c6f6d5; }
+
+.question-text {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #1a365d;
+  margin-bottom: 10px;
+}
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.choice-btn {
+  padding: 14px 20px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.choice-btn:active { transform: scale(0.98); }
+.choice-btn.selected {
+  border-color: #4a90d9;
+  background: #ebf4ff;
+  color: #1a365d;
+  font-weight: 700;
+}
+
+.eval-nav {
+  padding: 14px 20px;
+  display: flex;
+  gap: 10px;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+}
+.nav-btn {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.nav-prev { background: #edf2f7; color: #4a5568; }
+.nav-next { background: #4a90d9; color: white; }
+.nav-next:disabled { opacity: 0.4; }
+.nav-submit { background: #48bb78; color: white; }
+
+/* Transition Screen */
+.transition-screen {
+  display: none;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+  background: #f0f4f8;
+}
+.transition-screen.active { display: flex; }
+.transition-box { max-width: 400px; }
+.transition-box h2 { color: #48bb78; font-size: 24px; margin-bottom: 12px; }
+.transition-box p { color: #718096; margin-bottom: 24px; }
+
+/* Done Screen */
+.done-screen {
+  display: none;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+}
+.done-screen.active { display: flex; }
+
+/* Pause Screen */
+.pause-info {
+  background: #fffbeb;
+  border: 1px solid #f6e05e;
+  border-radius: 10px;
+  padding: 14px;
+  margin-top: 16px;
+  font-size: 14px;
+  color: #744210;
+}
+</style>
+</head>
+<body>
+
+<!-- PASSCODE SCREEN -->
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-box">
+    <div style="font-size: 48px; margin-bottom: 12px;">📋</div>
+    <div style="font-size: 20px; font-weight: 700; color: #1a365d; margin-bottom: 4px;">Interview Evaluation</div>
+    <div style="font-size: 14px; color: #718096; margin-bottom: 24px;">Enter passcode to continue</div>
+    <input type="password" id="passInput" placeholder="" autocomplete="off">
+    <div class="pass-error" id="passError"></div>
+    <button class="btn btn-primary" onclick="checkPass()">Unlock</button>
+  </div>
+</div>
+
+<!-- SETUP SCREEN -->
+<div class="setup-screen" id="setupScreen">
+  <h2>📋 Interview Setup</h2>
+  <div class="setup-field">
+    <label>Your Name (Evaluator/Committee Member)</label>
+    <input type="text" id="judgeName" placeholder="Enter your full name">
+  </div>
+  <div class="setup-field">
+    <label>Interview Date</label>
+    <select id="interviewDate"></select>
+  </div>
+  <div id="candidateList" style="margin: 20px 0;">
+    <label style="font-weight:600; font-size:14px; color:#4a5568;">Candidates for this date:</label>
+    <div id="candidateNames" style="margin-top:8px; padding:12px; background:#f7fafc; border-radius:10px; font-size:15px; line-height:1.8;"></div>
+  </div>
+  <button class="btn btn-primary" onclick="startEvaluation()">Start Evaluation</button>
+  <div class="pause-info">
+    💡 You can pause anytime. Completed evaluations are saved automatically.
+  </div>
+</div>
+
+<!-- EVALUATION SCREEN -->
+<div class="eval-screen" id="evalScreen">
+  <div class="eval-header">
+    <div class="candidate-name" id="candidateDisplay"></div>
+    <div class="date-info" id="dateDisplay"></div>
+    <div class="judge-info" id="judgeDisplay"></div>
+    <div class="progress" id="progressDisplay"></div>
+  </div>
+  <div class="eval-body" id="evalBody"></div>
+  <div class="eval-nav">
+    <button class="nav-btn nav-prev" id="btnPrevQ" onclick="prevSection()">◀ Back</button>
+    <button class="nav-btn nav-next" id="btnNextQ" onclick="nextSection()" disabled>Next ▶</button>
+  </div>
+</div>
+
+<!-- TRANSITION SCREEN (between candidates) -->
+<div class="transition-screen" id="transitionScreen">
+  <div class="transition-box">
+    <div style="font-size:48px; margin-bottom:16px;">✅</div>
+    <h2 id="transitionTitle">Evaluation Saved!</h2>
+    <p id="transitionMsg"></p>
+    <button class="btn btn-primary" id="btnNextCandidate" onclick="nextCandidate()">Next Candidate ▶</button>
+    <button class="btn btn-danger" onclick="pauseAndExit()">Pause & Exit</button>
+  </div>
+</div>
+
+<!-- DONE SCREEN -->
+<div class="done-screen" id="doneScreen">
+  <div class="transition-box">
+    <div style="font-size:48px; margin-bottom:16px;">🎉</div>
+    <h2 style="color:#1a365d;">All Done!</h2>
+    <p style="color:#718096;">All candidate evaluations have been submitted. Thank you!</p>
+    <button class="btn btn-primary" onclick="location.reload()" style="margin-top:20px;">Start Over</button>
+  </div>
+</div>
+
+<script>
+// ============================================
+// CONFIGURATION
+// ============================================
+const PASSCODE_HASH = '83f97c708e033a862c00b914ecef0caa63b35950f606f5a77e96a4e8300e7f69';
+// Google Apps Script Web App URL - REPLACE THIS
+let GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxpS9aHWCqzBhpnPe1XUHSC2-ufw7qlJQqIY3FmJEj50S6TvNy5I1CymkNFznRfnwdxfw/exec';
+
+// Interview schedule - UPDATE THIS with candidate names per date
+const INTERVIEW_SCHEDULE = {
+  '2026-03-30': {
+    label: 'Monday, March 30, 2026',
+    candidates: [
+      'Helene Clervius (3:00–3:20 PM)',
+      'Zhen-Jie Wang (3:25–3:45 PM)',
+      'Priyanka Deshpande (3:50–4:10 PM)',
+      'Mohammed Nadeem (4:15–4:35 PM)',
+      'Shrinjay Vyas (4:40–5:00 PM)'
+    ]
+  }
+};
+
+// ============================================
+// QUESTIONS DEFINITION
+// ============================================
+const SECTIONS = [
+  {
+    title: '1. Angiographic Knowledge Evaluation',
+    maxPoints: 20,
+    questions: [
+      { id: 'q1a', text: '(a) Can the candidate identify the study name correctly?',
+        choices: [{label:'Yes', points:2}, {label:'Sort of', points:1}, {label:'No', points:0}] },
+      { id: 'q1b', text: '(b) Can the candidate identify pertinent anatomy?',
+        choices: [{label:'Yes', points:2}, {label:'Sort of', points:1}, {label:'No', points:0}] },
+      { id: 'q1c', text: '(c) Can the candidate identify abnormal finding(s)?',
+        choices: [{label:'Yes', points:2}, {label:'Sort of', points:1}, {label:'No', points:0}] },
+      { id: 'q1d', text: '(d) Can the candidate list differential diagnosis or diagnosis?',
+        choices: [{label:'Yes', points:2}, {label:'Sort of', points:1}, {label:'No', points:0}] },
+      { id: 'q1e', text: '(e) Did the candidate ask for getting another injection or another study to support his/her diagnosis?',
+        choices: [{label:'Yes', points:2}, {label:'Sort of', points:1}, {label:'No', points:0}] },
+      { id: 'q1f', text: '(f) Can the candidate explain natural history of the diagnosis?',
+        choices: [{label:'Yes', points:2}, {label:'Sort of', points:1}, {label:'No', points:0}] },
+      { id: 'q1g', text: '(g) Can the candidate contemplate management options?',
+        choices: [{label:'Yes', points:2}, {label:'Sort of', points:1}, {label:'No', points:0}] },
+      { id: 'q1h', text: '(h) Were his/her answers coherent, organized, and thoughtful?',
+        choices: [{label:'Yes', points:6}, {label:'Sort of', points:3}, {label:'No', points:0}] }
+    ]
+  },
+  {
+    title: '2. Teachability / Humility',
+    maxPoints: 10,
+    questions: [
+      { id: 'q2a', text: '(a) Does he/she overstate himself/herself?',
+        choices: [{label:'No', points:2}, {label:'Sort of', points:1}, {label:'Yes', points:0}] },
+      { id: 'q2b', text: '(b) Does he/she recognize uncertainty?',
+        choices: [{label:'Yes', points:2}, {label:'Sort of', points:1}, {label:'No', points:0}] },
+      { id: 'q2c', text: '(c) Is he/she teachable?',
+        choices: [{label:'Yes', points:2}, {label:'Sort of', points:1}, {label:'No', points:0}] },
+      { id: 'q2d', text: '(d) Does he/she think safely?',
+        choices: [{label:'Yes', points:2}, {label:'Sort of', points:1}, {label:'No', points:0}] },
+      { id: 'q2e', text: '(e) Does he/she show humility and compliance?',
+        choices: [{label:'Yes', points:2}, {label:'Sort of', points:1}, {label:'No', points:0}] }
+    ]
+  },
+  {
+    title: '3. Interpersonal / Team Fit',
+    maxPoints: 15,
+    questions: [
+      { id: 'q3a', text: '(a) Do you think he/she will work with other fellow/PA/NP/Nurse/Techs well?',
+        choices: [{label:'Yes', points:5}, {label:'Likely', points:4}, {label:'Possible', points:3}, {label:'Unlikely', points:1}, {label:'No', points:0}] },
+      { id: 'q3b', text: '(b) Do you think he/she will follow your instructions and guidance well?',
+        choices: [{label:'Yes', points:5}, {label:'Likely', points:4}, {label:'Possible', points:3}, {label:'Unlikely', points:1}, {label:'No', points:0}] },
+      { id: 'q3c', text: '(c) Do you see any potential issues for having him/her as your assistant for a complex case?',
+        choices: [{label:'No concerns', points:5}, {label:'Unlikely', points:4}, {label:'Possible', points:3}, {label:'Likely', points:1}, {label:'Yes, concerns', points:0}] }
+    ]
+  },
+  {
+    title: '4. Commitment to Neurointervention',
+    maxPoints: 5,
+    questions: [
+      { id: 'q4', text: 'How committed is this candidate to Neurointervention?',
+        choices: [
+          {label:'Highly motivated', points:5},
+          {label:'Motivated but moderate', points:3},
+          {label:'Neutral, can do other fellowships if opportunity provided', points:1},
+          {label:'No reliable sign of motivation', points:0}
+        ] }
+    ]
+  }
+];
+
+// Section-based navigation (one page per section)
+let currentSectionIdx = 0;
+
+// ============================================
+// STATE
+// ============================================
+let judgeName = '';
+let selectedDate = '';
+let candidates = [];
+let currentCandidateIdx = 0;
+let currentQuestionIdx = 0;
+let answers = {}; // { questionId: { label, points } }
+
+// ============================================
+// PASSCODE
+// ============================================
+async function hashText(text) {
+  const encoded = new TextEncoder().encode(text);
+  const buffer = await crypto.subtle.digest('SHA-256', encoded);
+  return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function checkPass() {
+  const input = document.getElementById('passInput').value;
+  const inputHash = await hashText(input);
+  if (inputHash === PASSCODE_HASH) {
+    document.getElementById('lockScreen').style.display = 'none';
+    document.getElementById('setupScreen').style.display = 'block';
+    sessionStorage.setItem('eval_unlocked', '1');
+    populateDates();
+  } else {
+    document.getElementById('passError').textContent = 'Incorrect passcode';
+    document.getElementById('passInput').value = '';
+  }
+}
+
+document.getElementById('passInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') checkPass();
+});
+
+if (sessionStorage.getItem('eval_unlocked') === '1') {
+  document.getElementById('lockScreen').style.display = 'none';
+  document.getElementById('setupScreen').style.display = 'block';
+  populateDates();
+}
+
+// ============================================
+// SETUP
+// ============================================
+function populateDates() {
+  const select = document.getElementById('interviewDate');
+  select.innerHTML = '';
+  Object.keys(INTERVIEW_SCHEDULE).forEach(date => {
+    const opt = document.createElement('option');
+    opt.value = date;
+    opt.textContent = INTERVIEW_SCHEDULE[date].label;
+    select.appendChild(opt);
+  });
+  updateCandidateList();
+  select.addEventListener('change', updateCandidateList);
+}
+
+function updateCandidateList() {
+  const date = document.getElementById('interviewDate').value;
+  const schedule = INTERVIEW_SCHEDULE[date];
+  const container = document.getElementById('candidateNames');
+  if (schedule) {
+    container.innerHTML = schedule.candidates.map((c, i) => `${i + 1}. ${c}`).join('<br>');
+  }
+}
+
+function startEvaluation() {
+  judgeName = document.getElementById('judgeName').value.trim();
+  if (!judgeName) {
+    alert('Please enter your name');
+    return;
+  }
+  selectedDate = document.getElementById('interviewDate').value;
+  candidates = INTERVIEW_SCHEDULE[selectedDate].candidates;
+  currentCandidateIdx = 0;
+  startCandidate();
+}
+
+// ============================================
+// EVALUATION FLOW
+// ============================================
+function startCandidate() {
+  // Check if already submitted for this candidate
+  const submitKey = `eval_${selectedDate}_${currentCandidateIdx}_${judgeName}`;
+  if (localStorage.getItem(submitKey) === 'done') {
+    // Skip to next candidate or show done
+    if (currentCandidateIdx < candidates.length - 1) {
+      document.getElementById('transitionTitle').textContent = '⚠️ Already Submitted';
+      document.getElementById('transitionMsg').innerHTML =
+        `${candidates[currentCandidateIdx]} — already evaluated.<br>Next: <span style="font-weight:700; color:#1a365d; font-size:1.1em;">${candidates[currentCandidateIdx + 1]}</span>`;
+      document.getElementById('btnNextCandidate').style.display = '';
+      document.getElementById('setupScreen').style.display = 'none';
+      document.getElementById('lockScreen').style.display = 'none';
+      document.getElementById('evalScreen').classList.remove('active');
+      document.getElementById('transitionScreen').classList.add('active');
+    } else {
+      document.getElementById('setupScreen').style.display = 'none';
+      document.getElementById('lockScreen').style.display = 'none';
+      document.getElementById('doneScreen').classList.add('active');
+    }
+    return;
+  }
+  
+  currentSectionIdx = 0;
+  answers = {};
+  
+  document.getElementById('lockScreen').style.display = 'none';
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('transitionScreen').classList.remove('active');
+  document.getElementById('doneScreen').classList.remove('active');
+  document.getElementById('evalScreen').classList.add('active');
+  
+  renderSection();
+}
+
+function renderSection() {
+  const sec = SECTIONS[currentSectionIdx];
+  
+  document.getElementById('candidateDisplay').textContent = candidates[currentCandidateIdx];
+  document.getElementById('dateDisplay').textContent = INTERVIEW_SCHEDULE[selectedDate].label;
+  document.getElementById('judgeDisplay').textContent = 'Evaluator: ' + judgeName;
+  document.getElementById('progressDisplay').textContent =
+    `Section ${currentSectionIdx + 1}/${SECTIONS.length} · Candidate ${currentCandidateIdx + 1}/${candidates.length}`;
+  
+  const body = document.getElementById('evalBody');
+  let html = `<div class="section-title">${sec.title}</div>`;
+  
+  sec.questions.forEach(q => {
+    html += `<div class="question-block ${answers[q.id] ? 'answered' : ''}" id="block_${q.id}">`;
+    html += `<div class="question-text">${q.text}</div>`;
+    html += `<div class="choices">`;
+    q.choices.forEach(choice => {
+      const selected = answers[q.id] && answers[q.id].label === choice.label ? ' selected' : '';
+      html += `<button class="choice-btn${selected}" onclick="selectChoice('${q.id}', '${choice.label}', ${choice.points})">${choice.label}</button>`;
+    });
+    html += `</div></div>`;
+  });
+  
+  body.innerHTML = html;
+  body.scrollTop = 0;
+  
+  // Nav buttons
+  document.getElementById('btnPrevQ').style.display = currentSectionIdx > 0 ? '' : 'none';
+  
+  const nextBtn = document.getElementById('btnNextQ');
+  const isLast = currentSectionIdx === SECTIONS.length - 1;
+  nextBtn.textContent = isLast ? 'Submit ✓' : 'Next Section ▶';
+  nextBtn.className = isLast ? 'nav-btn nav-submit' : 'nav-btn nav-next';
+  checkSectionComplete();
+}
+
+function selectChoice(questionId, label, points) {
+  answers[questionId] = { label, points };
+  
+  // Update button states for this question
+  const block = document.getElementById('block_' + questionId);
+  block.classList.add('answered');
+  block.querySelectorAll('.choice-btn').forEach(btn => {
+    btn.classList.toggle('selected', btn.textContent === label);
+  });
+  
+  checkSectionComplete();
+}
+
+function checkSectionComplete() {
+  const sec = SECTIONS[currentSectionIdx];
+  const allAnswered = sec.questions.every(q => answers[q.id]);
+  document.getElementById('btnNextQ').disabled = !allAnswered;
+}
+
+function nextSection() {
+  const sec = SECTIONS[currentSectionIdx];
+  if (!sec.questions.every(q => answers[q.id])) return;
+  
+  if (currentSectionIdx < SECTIONS.length - 1) {
+    currentSectionIdx++;
+    renderSection();
+  } else {
+    submitEvaluation();
+  }
+}
+
+function prevSection() {
+  if (currentSectionIdx > 0) {
+    currentSectionIdx--;
+    renderSection();
+  }
+}
+
+// ============================================
+// SUBMIT
+// ============================================
+async function submitEvaluation() {
+  // Calculate section totals
+  const sec1 = ['q1a','q1b','q1c','q1d','q1e','q1f','q1g','q1h'].reduce((s, id) => s + (answers[id]?.points || 0), 0);
+  const sec2 = ['q2a','q2b','q2c','q2d','q2e'].reduce((s, id) => s + (answers[id]?.points || 0), 0);
+  const sec3 = ['q3a','q3b','q3c'].reduce((s, id) => s + (answers[id]?.points || 0), 0);
+  const sec4 = answers['q4']?.points || 0;
+  const total = sec1 + sec2 + sec3 + sec4;
+  
+  const payload = {
+    interviewDate: INTERVIEW_SCHEDULE[selectedDate].label,
+    judgeName: judgeName,
+    candidateName: candidates[currentCandidateIdx],
+    q1a: answers['q1a']?.label, q1b: answers['q1b']?.label, q1c: answers['q1c']?.label,
+    q1d: answers['q1d']?.label, q1e: answers['q1e']?.label, q1f: answers['q1f']?.label,
+    q1g: answers['q1g']?.label, q1h: answers['q1h']?.label,
+    section1Total: sec1,
+    q2a: answers['q2a']?.label, q2b: answers['q2b']?.label, q2c: answers['q2c']?.label,
+    q2d: answers['q2d']?.label, q2e: answers['q2e']?.label,
+    section2Total: sec2,
+    q3a: answers['q3a']?.label, q3b: answers['q3b']?.label, q3c: answers['q3c']?.label,
+    section3Total: sec3,
+    q4: answers['q4']?.label,
+    section4Total: sec4,
+    totalPoints: total
+  };
+  
+  // Send to Google Sheets
+  if (GOOGLE_SCRIPT_URL) {
+    try {
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) {
+      console.warn('Google Sheets submission error:', err);
+    }
+  }
+  
+  // Mark this candidate as submitted (prevent re-submission)
+  const submitKey = `eval_${selectedDate}_${currentCandidateIdx}_${judgeName}`;
+  localStorage.setItem(submitKey, 'done');
+  
+  // Show transition
+  document.getElementById('evalScreen').classList.remove('active');
+  
+  if (currentCandidateIdx < candidates.length - 1) {
+    document.getElementById('transitionTitle').textContent = '✅ Evaluation Saved!';
+    document.getElementById('transitionMsg').innerHTML =
+      `${candidates[currentCandidateIdx]} — complete.<br>Next: <span style="font-weight:700; color:#1a365d; font-size:1.1em;">${candidates[currentCandidateIdx + 1]}</span>`;
+    document.getElementById('btnNextCandidate').style.display = '';
+    document.getElementById('transitionScreen').classList.add('active');
+  } else {
+    // All candidates done
+    document.getElementById('doneScreen').classList.add('active');
+  }
+}
+
+function nextCandidate() {
+  currentCandidateIdx++;
+  startCandidate();
+}
+
+function pauseAndExit() {
+  document.getElementById('transitionScreen').classList.remove('active');
+  document.getElementById('doneScreen').classList.add('active');
+  document.querySelector('#doneScreen h2').textContent = 'Evaluation Paused';
+  document.querySelector('#doneScreen p').textContent =
+    `${currentCandidateIdx + 1} of ${candidates.length} candidates evaluated. Your responses have been saved. Thank you!`;
+}
+</script>
+</body>
+</html>
