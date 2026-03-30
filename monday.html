@@ -427,6 +427,11 @@ async function hashText(text) {
 }
 
 async function checkPass() {
+  // CLOSED - Monday evaluations are closed
+  document.getElementById('passError').textContent = 'This evaluation session has been closed.';
+  document.getElementById('passInput').value = '';
+  return;
+  
   const input = document.getElementById('passInput').value;
   const inputHash = await hashText(input);
   if (inputHash === PASSCODE_HASH) {
