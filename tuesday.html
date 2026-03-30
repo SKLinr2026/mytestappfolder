@@ -491,7 +491,7 @@ function startEvaluation() {
 function startCandidate() {
   // Check if already submitted for this candidate
   const submitKey = `eval_${selectedDate}_${currentCandidateIdx}_${judgeName}`;
-  if (localStorage.getItem(submitKey) === 'done') {
+  if (sessionStorage.getItem(submitKey) === 'done') {
     // Skip to next candidate or show done
     if (currentCandidateIdx < candidates.length - 1) {
       document.getElementById('transitionTitle').textContent = '⚠️ Already Submitted';
@@ -670,7 +670,7 @@ async function submitEvaluation() {
   
   // Mark this candidate as submitted (prevent re-submission)
   const submitKey = `eval_${selectedDate}_${currentCandidateIdx}_${judgeName}`;
-  localStorage.setItem(submitKey, 'done');
+  sessionStorage.setItem(submitKey, 'done');
   
   // Show transition
   document.getElementById('evalScreen').classList.remove('active');
