@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a365d">
+<title>2nd Interview Evaluation</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f0f4f8;
+  color: #2d3748;
+  min-height: 100vh;
+}
+
+/* ── Setup Screen ── */
+.setup-screen {
+  display: block;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+.setup-screen h2 { text-align: center; margin-bottom: 6px; color: #1a365d; font-size: 22px; }
+.setup-subtitle { text-align: center; color: #718096; font-size: 14px; margin-bottom: 28px; }
+.setup-field { margin-bottom: 18px; }
+.setup-field label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; color: #4a5568; }
+.setup-field select {
+  width: 100%;
+  padding: 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 16px;
+  outline: none;
+  background: white;
+  color: #2d3748;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23718096' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+.setup-field select:focus { border-color: #4a90d9; }
+
+/* already-submitted notice */
+.already-done-notice {
+  display: none;
+  background: #fff5f5;
+  border: 2px solid #fc8181;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  color: #c53030;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ── Buttons ── */
+.btn {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-primary { background: #4a90d9; color: white; }
+.btn-primary:active { background: #3a7bc8; }
+.btn-primary:disabled { background: #a0c4e8; cursor: not-allowed; }
+.btn-danger { background: #e53e3e; color: white; margin-top: 10px; }
+
+/* ── Eval Screen ── */
+.eval-screen { display: none; min-height: 100vh; flex-direction: column; }
+.eval-screen.active { display: flex; }
+.eval-header {
+  background: #1a365d;
+  color: white;
+  padding: 14px 20px;
+  text-align: center;
+}
+.eval-header .interview-badge {
+  display: inline-block;
+  background: #fc8181;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 2px 10px;
+  border-radius: 20px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.eval-header .candidate-name { font-size: 22px; font-weight: 700; }
+.eval-header .judge-info { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+.eval-header .progress { font-size: 12px; opacity: 0.6; margin-top: 4px; }
+
+.eval-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  max-width: 700px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── Section styles ── */
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a365d;
+  margin-bottom: 6px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #4a90d9;
+}
+.section-subtitle {
+  font-size: 13px;
+  color: #718096;
+  margin-bottom: 14px;
+}
+
+/* Look-for highlight box */
+.look-for-box {
+  background: #fffbeb;
+  border: 1.5px solid #f6e05e;
+  border-left: 4px solid #d69e2e;
+  border-radius: 0 10px 10px 0;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: #744210;
+  line-height: 1.8;
+}
+.look-for-box .look-label {
+  font-weight: 800;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #b7791f;
+  margin-bottom: 5px;
+}
+
+/* Probe questions box */
+.probe-box {
+  background: #ebf8ff;
+  border-left: 4px solid #4a90d9;
+  border-radius: 0 10px 10px 0;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: #2c5282;
+  line-height: 1.8;
+}
+.probe-box .probe-label {
+  font-weight: 800;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #2b6cb0;
+  margin-bottom: 5px;
+}
+
+/* Question block */
+.question-block {
+  margin-bottom: 14px;
+  padding: 14px;
+  background: white;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.question-block.answered { border-color: #68d391; }
+.question-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a365d;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+/* Score choices — descriptions only, no numbers */
+.score-choices { display: flex; flex-direction: column; gap: 8px; }
+.score-choice-btn {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  line-height: 1.4;
+  color: #2d3748;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s;
+}
+.score-choice-btn:active { transform: scale(0.99); }
+.score-choice-btn.selected {
+  border-color: #4a90d9;
+  background: #ebf4ff;
+  color: #1a365d;
+  font-weight: 700;
+}
+/* Highlight level indicator (colored left bar) */
+.score-choice-btn.level-5 { border-left: 4px solid #48bb78; }
+.score-choice-btn.level-4 { border-left: 4px solid #68d391; }
+.score-choice-btn.level-3 { border-left: 4px solid #ecc94b; }
+.score-choice-btn.level-2 { border-left: 4px solid #ed8936; }
+.score-choice-btn.level-1 { border-left: 4px solid #fc8181; }
+.score-choice-btn.level-5.selected { background: #f0fff4; border-color: #48bb78; }
+.score-choice-btn.level-4.selected { background: #f0fff4; border-color: #68d391; }
+.score-choice-btn.level-3.selected { background: #fffff0; border-color: #d69e2e; }
+.score-choice-btn.level-2.selected { background: #fffaf0; border-color: #dd6b20; }
+.score-choice-btn.level-1.selected { background: #fff5f5; border-color: #e53e3e; }
+
+/* Yes/No choices */
+.yesno-choices { display: flex; gap: 10px; }
+.yesno-btn {
+  flex: 1;
+  padding: 14px 10px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.yesno-btn.yes.selected  { border-color: #48bb78; background: #f0fff4; color: #276749; }
+.yesno-btn.borderline.selected { border-color: #ed8936; background: #fffaf0; color: #7b341e; }
+.yesno-btn.no.selected   { border-color: #e53e3e; background: #fff5f5; color: #822727; }
+
+/* Comment box */
+.comment-box {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: inherit;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+}
+.comment-box:focus { border-color: #4a90d9; }
+.word-count { font-size: 12px; color: #718096; text-align: right; margin-top: 4px; }
+.word-count.over { color: #e53e3e; font-weight: 600; }
+
+/* Nav */
+.eval-nav {
+  padding: 14px 20px;
+  display: flex;
+  gap: 10px;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+}
+.nav-btn {
+  flex: 1; padding: 14px; border: none;
+  border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;
+}
+.nav-prev { background: #edf2f7; color: #4a5568; }
+.nav-next { background: #4a90d9; color: white; }
+.nav-next:disabled { opacity: 0.4; cursor: not-allowed; }
+.nav-submit { background: #48bb78; color: white; }
+
+/* Done / transition screens */
+.transition-screen {
+  display: none; min-height: 100vh;
+  align-items: center; justify-content: center;
+  text-align: center; padding: 40px 20px; background: #f0f4f8;
+}
+.transition-screen.active { display: flex; }
+.done-screen {
+  display: none; min-height: 100vh;
+  align-items: center; justify-content: center;
+  text-align: center; padding: 40px 20px;
+}
+.done-screen.active { display: flex; }
+.end-box { max-width: 400px; }
+.end-box h2 { color: #1a365d; font-size: 24px; margin-bottom: 12px; }
+.end-box p  { color: #718096; margin-bottom: 20px; }
+
+.pause-info {
+  background: #fffbeb; border: 1px solid #f6e05e;
+  border-radius: 10px; padding: 14px; margin-top: 16px;
+  font-size: 14px; color: #744210;
+}
+</style>
+</head>
+<body>
+
+<!-- ── SETUP SCREEN ── -->
+<div class="setup-screen" id="setupScreen">
+  <div style="text-align:center; font-size:48px; margin-bottom:12px;">📋</div>
+  <h2>2nd Interview Evaluation</h2>
+  <p class="setup-subtitle">Montefiore Neurointervention Fellowship</p>
+
+  <div class="setup-field">
+    <label>Your Name (Evaluator)</label>
+    <select id="evaluatorSelect">
+      <option value="">— Select your name —</option>
+    </select>
+  </div>
+
+  <div class="setup-field">
+    <label>Candidate to Evaluate</label>
+    <select id="candidateSelect">
+      <option value="">— Select a candidate —</option>
+    </select>
+  </div>
+
+  <div class="already-done-notice" id="alreadyDoneNotice">
+    ⚠️ You have already submitted an evaluation for this candidate. Editing is not allowed.
+  </div>
+
+  <button class="btn btn-primary" id="startBtn" onclick="startEvaluation()" disabled>
+    Start Evaluation ▶
+  </button>
+
+  <div class="pause-info" style="margin-top:20px;">
+    💡 Once submitted, evaluations cannot be edited.
+  </div>
+  <div id="diagResult" style="margin-top:12px;font-size:13px;display:none;padding:10px;border-radius:8px;"></div>
+</div>
+
+<!-- ── EVALUATION SCREEN ── -->
+<div class="eval-screen" id="evalScreen">
+  <div class="eval-header">
+    <div class="interview-badge">2nd Interview</div>
+    <div class="candidate-name" id="candidateDisplay"></div>
+    <div class="judge-info" id="judgeDisplay"></div>
+    <div class="progress" id="progressDisplay"></div>
+  </div>
+  <div class="eval-body" id="evalBody"></div>
+  <div class="eval-nav">
+    <button class="nav-btn nav-prev" id="btnPrev" onclick="prevSection()" style="display:none;">◀ Back</button>
+    <button class="nav-btn nav-next" id="btnNext" onclick="nextSection()" disabled>Next ▶</button>
+  </div>
+</div>
+
+<!-- ── DONE SCREEN ── -->
+<div class="done-screen" id="doneScreen">
+  <div class="end-box">
+    <div style="font-size:56px; margin-bottom:16px;">🎉</div>
+    <h2>Evaluation Submitted!</h2>
+    <p id="doneMsg">Thank you. Your evaluation has been saved.</p>
+    <button class="btn btn-primary" onclick="goBackToSetup()" style="margin-top:8px;">Evaluate Another Candidate</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+// CONFIGURATION — update before deploying
+// ════════════════════════════════════════════
+
+// Google Apps Script Web App URL — REPLACE THIS
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz7KGkVk0vyVKPYqM6mExNSaZSMD927YcYcLur2ySvkxTclbQKlUhCAnrPJR9YL4jizgA/exec';
+
+// Evaluator names (faculty/committee members)
+const EVALUATORS = [
+  'Allan Brook',
+  'Richard Zampolin',
+  'Amanda Baker',
+  'Seon-Kyu Lee',
+  'David Altschul',
+  'Neil Haranhalli',
+  'Deepak Khatri'
+];
+
+// Candidate list
+const CANDIDATES = [
+  'Serra, Riccardo',
+  'Nadeem, Mohammed',
+  'Mu, Brian',
+  'Wang, Zhen-jie',
+  'Lee, Sanghyo',
+  'Yaghmoor, Bassam',
+  'Toro-lira, Daniel',
+  'Clervius, Hélène',
+  'Deshpande, Priyanka',
+  'Baniya, Aashish'
+];
+
+// ════════════════════════════════════════════
+// SECTIONS / QUESTIONS
+// Hidden point values — interviewer sees descriptions only
+// Points are sent to Google Sheets on submit
+// ════════════════════════════════════════════
+const SECTIONS = [
+  {
+    id: 'sec1',
+    title: '1. Clinical Judgment & Decision-Making',
+    lookFor: [
+      'Recognizes nuance rather than giving rigid answers',
+      'Understands risk-benefit tradeoffs',
+      'Can identify when NOT to treat',
+      'Escalates appropriately and safely'
+    ],
+    probeQuestions: [
+      'Describe a situation where you disagreed with an attending decision. How did you handle it?',
+      'How do you approach a complication or near-complication?'
+    ],
+    questions: [{
+      id: 'q1',
+      text: 'Rate this candidate\'s clinical judgment and decision-making:',
+      type: 'score',
+      choices: [
+        { label: 'Exceptional — nuanced, safe, and thoroughly thoughtful', points: 15, level: 5 },
+        { label: 'Strong — good judgment with only minor gaps', points: 13, level: 4 },
+        { label: 'Acceptable — somewhat superficial or inconsistent at times', points: 11, level: 3 },
+        { label: 'Concerning — notable gaps in clinical reasoning', points: 8, level: 2 },
+        { label: 'Unsafe — rigid, poor, or dangerous judgment', points: 4, level: 1 },
+      ]
+    }]
+  },
+  {
+    id: 'sec2',
+    title: '2. Composure, Maturity & Professionalism',
+    lookFor: [
+      'Calm rather than performative confidence',
+      'Honest self-assessment',
+      'No blaming others',
+      'No exaggerated self-promotion'
+    ],
+    probeQuestions: null,
+    questions: [{
+      id: 'q2',
+      text: 'Rate this candidate\'s composure, maturity, and professionalism:',
+      type: 'score',
+      choices: [
+        { label: 'Exceptional — poised, self-aware, and genuinely mature', points: 10, level: 5 },
+        { label: 'Strong — clearly professional', points: 8, level: 4 },
+        { label: 'Acceptable', points: 6, level: 3 },
+        { label: 'Some concerns noted', points: 4, level: 2 },
+        { label: 'Major concern — significant red flags', points: 2, level: 1 },
+      ]
+    }]
+  },
+  {
+    id: 'sec3',
+    title: '3. Teachability & Growth Mindset',
+    lookFor: null,
+    probeQuestions: [
+      'What is a weakness in your current training that you are actively trying to improve?',
+      'Tell us about a case that changed how you think.'
+    ],
+    questions: [{
+      id: 'q3',
+      text: 'Rate this candidate\'s teachability and growth mindset:',
+      type: 'score',
+      choices: [
+        { label: 'Highly coachable — reflective and intellectually flexible', points: 10, level: 5 },
+        { label: 'Clearly teachable', points: 8, level: 4 },
+        { label: 'Acceptable', points: 6, level: 3 },
+        { label: 'Somewhat defensive or rigid', points: 4, level: 2 },
+        { label: 'Poor insight — low coachability', points: 2, level: 1 },
+      ]
+    }]
+  },
+  {
+    id: 'sec4',
+    title: '4. Program Fit & Team Fit',
+    lookFor: null,
+    probeQuestions: [
+      'Why is our program the right fit for your goals?',
+      'What type of mentorship helps you perform best?',
+      'What are you looking for in fellowship culture?'
+    ],
+    questions: [{
+      id: 'q4',
+      text: 'Rate how well this candidate fits our program and team:',
+      type: 'score',
+      choices: [
+        { label: 'Excellent fit — would clearly thrive in our environment', points: 10, level: 5 },
+        { label: 'Strong fit', points: 8, level: 4 },
+        { label: 'Acceptable but uncertain', points: 6, level: 3 },
+        { label: 'Questionable fit', points: 4, level: 2 },
+        { label: 'Poor fit', points: 2, level: 1 },
+      ]
+    }]
+  },
+  {
+    id: 'sec5',
+    title: '5. Commitment to Neurointervention & Montefiore',
+    lookFor: [
+      'Knowledge of our faculty and program specifics',
+      'Thoughtful reasons for wanting this training environment',
+      'Not just "good volume" or "great reputation"'
+    ],
+    probeQuestions: null,
+    questions: [{
+      id: 'q5',
+      text: 'Rate this candidate\'s commitment to neurointervention and our program:',
+      type: 'score',
+      choices: [
+        { label: 'Clearly committed — genuinely and specifically interested in our program', points: 5, level: 5 },
+        { label: 'Strong interest', points: 4, level: 4 },
+        { label: 'Reasonable interest but answers feel generic', points: 3, level: 3 },
+        { label: 'Uncertain commitment', points: 2, level: 2 },
+        { label: 'Weak or generic — no real program knowledge', points: 1, level: 1 },
+      ]
+    }]
+  },
+  {
+    id: 'sec6',
+    title: '6. Final Gut-Check',
+    lookFor: null,
+    probeQuestions: null,
+    questions: [
+      {
+        id: 'gut1',
+        text: 'Would you trust this candidate in a high-stakes complication scenario with supervision?',
+        type: 'yesno'
+      },
+      {
+        id: 'gut2',
+        text: 'Would you want this candidate as your fellow or junior partner?',
+        type: 'yesno'
+      },
+      {
+        id: 'gut3',
+        text: 'Would you rank this candidate in our top tier?',
+        type: 'yesno'
+      },
+      {
+        id: 'concern',
+        text: 'Any hidden concern not captured by the scores above? (Optional)',
+        type: 'textarea'
+      }
+    ]
+  }
+];
+
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+let judgeName = '';
+let selectedCandidate = '';
+let currentSectionIdx = 0;
+let answers = {};
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+(function init() {
+  // Temporarily clear locks so evaluators can resubmit if data was lost
+  Object.keys(localStorage).filter(k => k.startsWith('eval2_')).forEach(k => localStorage.removeItem(k));
+
+  const evalSel = document.getElementById('evaluatorSelect');
+  EVALUATORS.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name; opt.textContent = name;
+    evalSel.appendChild(opt);
+  });
+
+  const candSel = document.getElementById('candidateSelect');
+  CANDIDATES.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name; opt.textContent = name;
+    candSel.appendChild(opt);
+  });
+
+  evalSel.addEventListener('change', checkSetupReady);
+  candSel.addEventListener('change', checkSetupReady);
+})();
+
+function checkSetupReady() {
+  const evaluator = document.getElementById('evaluatorSelect').value;
+  const candidate = document.getElementById('candidateSelect').value;
+  const notice = document.getElementById('alreadyDoneNotice');
+  const btn = document.getElementById('startBtn');
+
+  if (!evaluator || !candidate) {
+    notice.style.display = 'none';
+    btn.disabled = true;
+    return;
+  }
+
+  const key = submitKey(evaluator, candidate);
+  if (localStorage.getItem(key) === 'done') {
+    notice.style.display = 'block';
+    btn.disabled = true;
+  } else {
+    notice.style.display = 'none';
+    btn.disabled = false;
+  }
+}
+
+function submitKey(evaluator, candidate) {
+  return `eval2_${evaluator}_${candidate}`.replace(/\s+/g, '_');
+}
+
+// ════════════════════════════════════════════
+// FLOW
+// ════════════════════════════════════════════
+function startEvaluation() {
+  judgeName = document.getElementById('evaluatorSelect').value;
+  selectedCandidate = document.getElementById('candidateSelect').value;
+  if (!judgeName || !selectedCandidate) return;
+
+  // Double-check not already submitted
+  if (localStorage.getItem(submitKey(judgeName, selectedCandidate)) === 'done') return;
+
+  currentSectionIdx = 0;
+  answers = {};
+
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('evalScreen').classList.add('active');
+  renderSection();
+}
+
+function renderSection() {
+  const sec = SECTIONS[currentSectionIdx];
+
+  document.getElementById('candidateDisplay').textContent = selectedCandidate;
+  document.getElementById('judgeDisplay').textContent = 'Evaluator: ' + judgeName;
+  document.getElementById('progressDisplay').textContent =
+    `Section ${currentSectionIdx + 1} of ${SECTIONS.length}`;
+
+  let html = `<div class="section-title">${sec.title}</div>`;
+
+  // Look-for box
+  if (sec.lookFor) {
+    html += `<div class="look-for-box">
+      <div class="look-label">🔍 Look for</div>
+      ${sec.lookFor.map(l => `• ${l}`).join('<br>')}
+    </div>`;
+  }
+
+  // Probe questions box
+  if (sec.probeQuestions) {
+    html += `<div class="probe-box">
+      <div class="probe-label">💬 Probe Questions</div>
+      ${sec.probeQuestions.map((q, i) => `${i + 1}. ${q}`).join('<br>')}
+    </div>`;
+  }
+
+  // Questions
+  sec.questions.forEach(q => {
+    const isAnswered = answers[q.id] !== undefined;
+    html += `<div class="question-block ${isAnswered ? 'answered' : ''}" id="block_${q.id}">`;
+    html += `<div class="question-text">${q.text}</div>`;
+
+    if (q.type === 'score') {
+      html += `<div class="score-choices">`;
+      q.choices.forEach((choice, idx) => {
+        const sel = answers[q.id]?.points === choice.points ? ' selected' : '';
+        const escaped = choice.label.replace(/'/g, "\\'");
+        html += `<button class="score-choice-btn level-${choice.level}${sel}"
+          onclick="selectScore('${q.id}', '${escaped}', ${choice.points})">
+          ${choice.label}
+        </button>`;
+      });
+      html += `</div>`;
+
+    } else if (q.type === 'yesno') {
+      const cur = answers[q.id]?.label;
+      html += `<div class="yesno-choices">
+        <button class="yesno-btn yes ${cur === 'Yes' ? 'selected' : ''}"
+          onclick="selectYesNo('${q.id}', 'Yes')">✅ Yes</button>
+        <button class="yesno-btn borderline ${cur === 'Borderline' ? 'selected' : ''}"
+          onclick="selectYesNo('${q.id}', 'Borderline')">⚠️ Borderline</button>
+        <button class="yesno-btn no ${cur === 'No' ? 'selected' : ''}"
+          onclick="selectYesNo('${q.id}', 'No')">❌ No</button>
+      </div>`;
+
+    } else if (q.type === 'textarea') {
+      const val = answers[q.id]?.label || '';
+      html += `<textarea id="input_${q.id}" class="comment-box" maxlength="700"
+        placeholder="Optional — enter any concerns here..."
+        oninput="updateComment('${q.id}')">${val}</textarea>
+        <div class="word-count" id="wc_${q.id}">0 / 100 words</div>`;
+    }
+
+    html += `</div>`;
+  });
+
+  const body = document.getElementById('evalBody');
+  body.innerHTML = html;
+  body.scrollTop = 0;
+
+  // Restore word counts
+  sec.questions.filter(q => q.type === 'textarea').forEach(q => {
+    const ta = document.getElementById('input_' + q.id);
+    if (ta && ta.value) updateComment(q.id);
+  });
+
+  // Nav
+  const isLast = currentSectionIdx === SECTIONS.length - 1;
+  const btnPrev = document.getElementById('btnPrev');
+  const btnNext = document.getElementById('btnNext');
+  btnPrev.style.display = currentSectionIdx > 0 ? '' : 'none';
+  btnNext.textContent = isLast ? 'Submit ✓' : 'Next ▶';
+  btnNext.className   = isLast ? 'nav-btn nav-submit' : 'nav-btn nav-next';
+  checkSectionComplete();
+}
+
+function selectScore(qId, label, points) {
+  answers[qId] = { label, points };
+  renderSection(); // re-render to show selection highlight
+}
+
+function selectYesNo(qId, label) {
+  answers[qId] = { label, points: 0 };
+  renderSection();
+}
+
+function updateComment(qId) {
+  const ta = document.getElementById('input_' + qId);
+  if (!ta) return;
+  const words = ta.value.trim() ? ta.value.trim().split(/\s+/) : [];
+  const wc = document.getElementById('wc_' + qId);
+  wc.textContent = words.length + ' / 100 words';
+  wc.className = words.length > 100 ? 'word-count over' : 'word-count';
+  answers[qId] = words.length <= 100
+    ? { label: ta.value.trim(), points: 0 }
+    : undefined;
+  checkSectionComplete();
+}
+
+function checkSectionComplete() {
+  const sec = SECTIONS[currentSectionIdx];
+  const allDone = sec.questions.every(q => q.type === 'textarea' || answers[q.id] !== undefined);
+  document.getElementById('btnNext').disabled = !allDone;
+}
+
+function nextSection() {
+  const sec = SECTIONS[currentSectionIdx];
+  const allDone = sec.questions.every(q => q.type === 'textarea' || answers[q.id] !== undefined);
+  if (!allDone) return;
+  if (currentSectionIdx < SECTIONS.length - 1) {
+    currentSectionIdx++;
+    renderSection();
+  } else {
+    submitEvaluation();
+  }
+}
+
+function prevSection() {
+  if (currentSectionIdx > 0) { currentSectionIdx--; renderSection(); }
+}
+
+// ════════════════════════════════════════════
+// SUBMIT
+// ════════════════════════════════════════════
+async function submitEvaluation() {
+  const s1 = answers['q1']?.points || 0;
+  const s2 = answers['q2']?.points || 0;
+  const s3 = answers['q3']?.points || 0;
+  const s4 = answers['q4']?.points || 0;
+  const s5 = answers['q5']?.points || 0;
+  const total = s1 + s2 + s3 + s4 + s5;
+
+  const payload = {
+    evaluatorName:       judgeName,
+    candidateName:       selectedCandidate,
+    submittedAt:         new Date().toLocaleString(),
+    sec1_label:          answers['q1']?.label || '',
+    sec1_score:          s1,
+    sec2_label:          answers['q2']?.label || '',
+    sec2_score:          s2,
+    sec3_label:          answers['q3']?.label || '',
+    sec3_score:          s3,
+    sec4_label:          answers['q4']?.label || '',
+    sec4_score:          s4,
+    sec5_label:          answers['q5']?.label || '',
+    sec5_score:          s5,
+    totalScore:          total,
+    gut1_highStakes:     answers['gut1']?.label || '',
+    gut2_partner:        answers['gut2']?.label || '',
+    gut3_topTier:        answers['gut3']?.label || '',
+    hiddenConcern:       answers['concern']?.label || ''
+  };
+
+  // Show submitting state
+  document.getElementById('btnNext').disabled = true;
+  document.getElementById('btnNext').textContent = 'Submitting...';
+
+  // Submit to Google Sheets via form-encoded POST (avoids CORS preflight)
+  let submitOk = false;
+  if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+    try {
+      const formData = new FormData();
+      formData.append('data', JSON.stringify(payload));
+      const resp = await fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: formData
+      });
+      submitOk = true;
+      console.log('Fetch completed (no-cors — response opaque)');
+    } catch (err) {
+      console.error('Fetch error:', err);
+      submitOk = false;
+    }
+  }
+
+  // Lock this evaluator+candidate pair permanently
+  localStorage.setItem(submitKey(judgeName, selectedCandidate), 'done');
+
+  // Show done screen
+  document.getElementById('evalScreen').classList.remove('active');
+  document.getElementById('doneMsg').textContent = submitOk
+    ? 'Submitted! Your evaluation of ' + selectedCandidate + ' has been sent to Google Sheets.'
+    : 'Network error — evaluation saved locally but may not have reached Google Sheets.';
+  document.getElementById('doneScreen').classList.add('active');
+}
+
+function goBackToSetup() {
+  document.getElementById('doneScreen').classList.remove('active');
+  document.getElementById('setupScreen').style.display = 'block';
+  document.getElementById('evaluatorSelect').value = '';
+  document.getElementById('candidateSelect').value = '';
+  document.getElementById('alreadyDoneNotice').style.display = 'none';
+  document.getElementById('startBtn').disabled = true;
+}
+
+// ── Diagnostic: test if Google Sheets URL is reachable ──
+async function runDiagnostic() {
+  const box = document.getElementById('diagResult');
+  box.style.display = 'block';
+  box.style.background = '#fffbeb';
+  box.style.border = '1px solid #f6e05e';
+  box.style.color = '#744210';
+  box.textContent = '⏳ Testing connection to Google Sheets...';
+
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+    box.textContent = '❌ No Google Script URL set in the HTML file.';
+    box.style.background = '#fff5f5'; box.style.border = '1px solid #fc8181'; box.style.color = '#c53030';
+    return;
+  }
+
+  // Test 1: GET request (should redirect to the script — confirms URL is valid)
+  try {
+    const testPayload = {
+      evaluatorName: 'TEST_EVALUATOR',
+      candidateName: 'TEST_CANDIDATE',
+      submittedAt: new Date().toLocaleString(),
+      sec1_label: 'TEST', sec1_score: 1,
+      sec2_label: 'TEST', sec2_score: 1,
+      sec3_label: 'TEST', sec3_score: 1,
+      sec4_label: 'TEST', sec4_score: 1,
+      sec5_label: 'TEST', sec5_score: 1,
+      totalScore: 5,
+      gut1_highStakes: 'Yes', gut2_partner: 'Yes', gut3_topTier: 'Yes',
+      hiddenConcern: 'This is a test submission - please delete from sheet'
+    };
+
+    const fd = new FormData();
+    fd.append('data', JSON.stringify(testPayload));
+
+    await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd });
+
+    box.style.background = '#f0fff4'; box.style.border = '1px solid #68d391'; box.style.color = '#276749';
+    box.innerHTML = '✅ Request sent successfully!<br><small>Check your Google Sheet now — a "TEST_CANDIDATE" sheet should appear within a few seconds. If it does not appear, the Apps Script needs redeployment as a New Version.</small>';
+  } catch(err) {
+    box.style.background = '#fff5f5'; box.style.border = '1px solid #fc8181'; box.style.color = '#c53030';
+    box.textContent = '❌ Connection failed: ' + err.message;
+  }
+}
+
+// ── Clear all locally stored test/evaluation data ──
+function clearTestData() {
+  const keys = Object.keys(localStorage).filter(k => k.startsWith('eval2_'));
+  if (keys.length === 0) {
+    alert('No evaluation data found in local storage.');
+    return;
+  }
+  if (confirm('Clear ' + keys.length + ' stored evaluation(s)? This only clears local lock data — Google Sheets data is not affected.')) {
+    keys.forEach(k => localStorage.removeItem(k));
+    alert('✅ Cleared ' + keys.length + ' evaluation(s). You can now re-test.');
+    checkSetupReady();
+  }
+}
+</script>
+</body>
+</html>
